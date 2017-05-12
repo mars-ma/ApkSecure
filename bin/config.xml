@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<signature-path>mysignature.jks</signature-path>
+	<store-pwd>abcdefg</store-pwd>
+	<alias>abcdefg</alias>
+	<alias-pwd>abcdefg</alias-pwd>
+	<winrar-path>C:\Program Files (x86)\WinRAR\WinRAR.exe</winrar-path>
+</config>
