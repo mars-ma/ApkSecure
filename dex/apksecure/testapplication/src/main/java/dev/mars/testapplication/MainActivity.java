@@ -11,11 +11,11 @@ import java.net.URI;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
-
+    Methods2 methods2 =new Methods2();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        HashMap d;
+        methods2.l();
         setContentView(R.layout.activity_main);
         LogUtils.d("MainActivity onCreate");
         ((MyApplication)getApplication()).test(this.getClass().getName());

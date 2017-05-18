@@ -4,7 +4,7 @@
 #include "logutils.h"
 
 const jbyte pwd[100]="laChineestunlionendormi";
-
+const char* encryptedFileName = "apksecurefile";
 
 
 
@@ -123,16 +123,32 @@ jstring getOriginDexPath(JNIEnv *env, jobject instance){
         return NULL;
     }
 
-    jstring dexFolderPath = (jstring) env->CallObjectMethod(dexFolderFile, getAbsolutePathMethodId);
-    std::string dexFilePathStr = env->GetStringUTFChars(dexFolderPath, false);
-    dexFilePathStr.append("/classes.dex");
-    LOGE("dex路径:%s",dexFilePathStr.c_str());
-    jstring dexFilePath =env->NewStringUTF(dexFilePathStr.c_str());
-    jobject dexFile = NewFile(env,FileClass,dexFilePath);
+    jstring dexFolderPathJStr = (jstring) env->CallObjectMethod(dexFolderFile, getAbsolutePathMethodId);
+    const char* dexFolderPath = env->GetStringUTFChars(dexFolderPathJStr,false);
 
-    if(isFileExist(env,dexFile)){
-        LOGE("找到原DEX，无需解压");
-        return dexFilePath;
+    jmethodID listFileNames = env->GetMethodID(FileClass,"list","()[Ljava/lang/String;");
+    jmethodID endsWith = env->GetMethodID(env->GetObjectClass(dexFolderPathJStr),"endsWith","(Ljava/lang/String;)Z");
+
+    jstring dexFormat = env->NewStringUTF(".dex");
+    jobjectArray dexFileNames = (jobjectArray) env->CallObjectMethod(dexFolderFile, listFileNames);
+    jint totalFiles = env->GetArrayLength(dexFileNames);
+    std::string dexPaths="";
+    if(dexFileNames!=NULL&&totalFiles>0){
+        for(int i=0;i <totalFiles;i++){
+            jstring fileNameJStr = (jstring) env->GetObjectArrayElement(dexFileNames, i);
+            const char * fileName = env->GetStringUTFChars(fileNameJStr, false);
+            LOGE("检测到文件 : %s",fileName);
+            if(env->CallBooleanMethod(fileNameJStr,endsWith,dexFormat)){
+                dexPaths.append(dexFolderPath);
+                dexPaths.append("/");
+                dexPaths.append(fileName);
+                dexPaths.append(":");
+            }
+        }
+        LOGE("DEX路径 : %s",dexPaths.c_str());
+        if(dexPaths.length()>0) {
+            return env->NewStringUTF(dexPaths.c_str());
+        }
     }
     LOGE("未找到原DEX，需要解压");
 
@@ -148,8 +164,8 @@ jstring getOriginDexPath(JNIEnv *env, jobject instance){
         LOGE("未找到openId");
         return NULL;
     }
-    jstring zipFileName = env->NewStringUTF("abc.zip");
-    jobject is = env->CallObjectMethod(assetsManager,openId,zipFileName);
+    jstring encryptedFileNameJStr = env->NewStringUTF(encryptedFileName);
+    jobject is = env->CallObjectMethod(assetsManager,openId,encryptedFileNameJStr);
     if(env->ExceptionCheck()){
         env->ExceptionDescribe();
         env->ExceptionClear();
@@ -161,12 +177,12 @@ jstring getOriginDexPath(JNIEnv *env, jobject instance){
         LOGE("未找到FileOutputSteamClass");
         return NULL;
     }
-    jmethodID initFileOutputStreamClassId = env->GetMethodID(FileOutputStreamClass,"<init>","(Ljava/lang/String;)V");
-    std::string zipFilePathStr = env->GetStringUTFChars(dexFolderPath, false);
-    zipFilePathStr.append("/abc.zip");
-    LOGE("zip路径:%s",zipFilePathStr.c_str());
-    jstring zipFilePath =env->NewStringUTF(zipFilePathStr.c_str());
-    jobject fos = env->NewObject(FileOutputStreamClass,initFileOutputStreamClassId,zipFilePath);
+    jmethodID initFileOutputStreamClass = env->GetMethodID(FileOutputStreamClass,"<init>","(Ljava/lang/String;)V");
+    std::string encryptedFileCopyPath = env->GetStringUTFChars(dexFolderPathJStr, false);
+    encryptedFileCopyPath.append(encryptedFileName);
+    LOGE("加密文件复制后的路径:%s",encryptedFileCopyPath.c_str());
+    jstring encryptedFileCopyPathJStr =env->NewStringUTF(encryptedFileCopyPath.c_str());
+    jobject fos = env->NewObject(FileOutputStreamClass,initFileOutputStreamClass,encryptedFileCopyPathJStr);
     if(fos==NULL){
         LOGE("创建fos失败");
     }
@@ -183,53 +199,77 @@ jstring getOriginDexPath(JNIEnv *env, jobject instance){
     jint bufferSize = 0;
     while(bufferSize!=-1){
         bufferSize = env->CallIntMethod(is,readId,buffer);
-        LOGE("读取 %d 个字节",bufferSize);
+        //LOGE("读取 %d 个字节",bufferSize);
         if(bufferSize>0){
             env->CallVoidMethod(fos,writeId,buffer,0,bufferSize);
-            LOGE("写出 %d 个字节",bufferSize);
+            //LOGE("写出 %d 个字节",bufferSize);
         }
     }
     env->CallVoidMethod(fos,flushId);
     env->CallVoidMethod(is,isCloseId);
     env->CallVoidMethod(fos,fosCloseId);
 
-    jobject zipFile = NewFile(env,FileClass,zipFilePath);
-    if(isFileExist(env,zipFile)){
-        LOGE("成功复制文件:%s",zipFilePathStr.c_str());
+    jobject encryptedFile = NewFile(env,FileClass,encryptedFileCopyPathJStr);
+    if(isFileExist(env,encryptedFile)){
+        LOGE("成功复制文件:%s",encryptedFileCopyPath.c_str());
     }else{
-        LOGE("未找到文件:%s",zipFilePathStr.c_str());
+        LOGE("未找到文件:%s",encryptedFileCopyPath.c_str());
     }
 
+    std::string zipFilePath = env->GetStringUTFChars(dexFolderPathJStr, false);
+    zipFilePath.append("/abc.zip");
+    jstring zipFilePathJStr = env->NewStringUTF(zipFilePath.c_str());
 
+    decrypt(env,encryptedFileCopyPathJStr,zipFilePathJStr);
 
-    unzipFile(env,zipFilePath,dexFolderPath);
-
-    std::string abcFilePathStr = env->GetStringUTFChars(dexFolderPath, false);
-    abcFilePathStr.append("/abc");
-    jstring abcFilePath = env->NewStringUTF(abcFilePathStr.c_str());
-    jobject abcFile = NewFile(env,FileClass,abcFilePath);
+    jobject abcFile = NewFile(env,FileClass,zipFilePathJStr);
     if(isFileExist(env,abcFile)){
-        LOGE("成功解压文件:%s",abcFilePathStr.c_str());
+        LOGE("成功解密文件:%s",zipFilePath.c_str());
     }else{
-        LOGE("未找到文件:%s",abcFilePathStr.c_str());
-    }
-    decrypt(env,abcFilePath,dexFilePath);
-    if(isFileExist(env,dexFile)){
-        LOGE("成功输出:%s",dexFilePathStr.c_str());
-    }else{
-        LOGE("未找到:%s",dexFilePathStr.c_str());
+        LOGE("未找到文件:%s",zipFilePath.c_str());
     }
 
+    unzipFile(env,zipFilePathJStr,dexFolderPathJStr);
 
-    return dexFilePath;
+    jmethodID fileDelete = env->GetMethodID(FileClass,"delete","()Z");
+    jboolean r1 = env->CallBooleanMethod(abcFile, fileDelete);
+    jboolean r2 = env->CallBooleanMethod(encryptedFile,fileDelete);
+    if(r1&&r2) {
+        LOGE("删除加密文件和压缩文件");
+    }
+    dexPaths.clear();
+    dexFileNames = (jobjectArray) env->CallObjectMethod(dexFolderFile, listFileNames);
+    totalFiles = env->GetArrayLength(dexFileNames);
+    if(dexFileNames!=NULL&&totalFiles>0){
+        for(int i=0;i <totalFiles;i++){
+            jstring fileNameJStr = (jstring) env->GetObjectArrayElement(dexFileNames, i);
+            const char * fileName = env->GetStringUTFChars(fileNameJStr, false);
+            LOGE("检测到文件 : %s",fileName);
+            if(env->CallBooleanMethod(fileNameJStr,endsWith,dexFormat)){
+                dexPaths.append(dexFolderPath);
+                dexPaths.append("/");
+                dexPaths.append(fileName);
+                dexPaths.append(":");
+            }
+        }
+        LOGE("DEX路径 : %s",dexPaths.c_str());
+        if(dexPaths.length()>0) {
+            return env->NewStringUTF(dexPaths.c_str());
+        }
+    }
+    return NULL;
 }
 
 JNIEXPORT void JNICALL
 Java_dev_mars_secure_ProxyApplication_onAttachBaseContext(JNIEnv *env, jobject instance,jint build_version) {
     //找到原classes.dex
-    jstring dexFilePath =getOriginDexPath(env,instance);
+    jstring dexFilePaths =getOriginDexPath(env,instance);
+    if(dexFilePaths==NULL&&env->GetStringLength(dexFilePaths)<=0){
+        LOGE("未成功生成DEX");
+        return;
+    }
     //到这一步为止，classes.dex已经成功从zip中解密并解压到 dexFilePath,下一步开始替换默认的PathClassLoader
-    replaceDefaultClassLoader(env, instance,dexFilePath,build_version);
+    replaceDefaultClassLoader(env, instance,dexFilePaths,build_version);
 }
 
 
@@ -270,9 +310,31 @@ void replaceDefaultClassLoader(JNIEnv *env, jobject instance, jstring dexFilePat
     jfieldID mClassLoaderField = env->GetFieldID(env->GetObjectClass(loadedApk),"mClassLoader","Ljava/lang/ClassLoader;");
     jobject mClassLoader = env->GetObjectField(loadedApk,mClassLoaderField);
 
+    //分割dexFilePath
+    jmethodID split=env->GetMethodID(env->GetObjectClass(dexFilePath),"split","(Ljava/lang/String;)[Ljava/lang/String;");
+    jobjectArray paths = (jobjectArray) env->CallObjectMethod(dexFilePath, split, env->NewStringUTF(":"));
+
     jclass DexClassLoaderClass = env->FindClass("dalvik/system/DexClassLoader");
     jmethodID initDexClassLoader  = env->GetMethodID(DexClassLoaderClass,"<init>","(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
-    jobject dexClassLoader = env->NewObject(DexClassLoaderClass,initDexClassLoader,dexFilePath,optimizedDirFolderPath,nativeLibraryDir,mClassLoader);
+    LOGE("开始加载DEX %s",env->GetStringUTFChars(dexFilePath,false));
+
+    //默认用以:分割的路径加载，如果加载的dex很大，在Android5.0以上很耗时
+    jobject dexClassLoader= env->NewObject(DexClassLoaderClass,initDexClassLoader,dexFilePath,optimizedDirFolderPath,nativeLibraryDir,mClassLoader);
+
+    //将DEX依次加载
+    /*
+    jobject dexClassLoader = mClassLoader;
+    int totalPath = env->GetArrayLength(paths);
+    if(paths!=NULL&&totalPath>0){
+        for(int i=0;i <totalPath;i++){
+            jstring fileNameJStr = (jstring) env->GetObjectArrayElement(paths, i);
+            const char * fileName = env->GetStringUTFChars(fileNameJStr, false);
+            LOGE("加载第%d个DEX : %s",i,fileName);
+            dexClassLoader = env->NewObject(DexClassLoaderClass,initDexClassLoader,fileNameJStr,optimizedDirFolderPath,nativeLibraryDir,dexClassLoader);
+        }
+    }
+     */
+    LOGE("所有DEX加载完毕");
 
     env->SetObjectField(loadedApk,mClassLoaderField,dexClassLoader);
 

@@ -1,35 +1,85 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.getkeepsafe.dexcount'
 
 android {
+    signingConfigs {
+        release {
+            keyAlias 'abcdefg'
+            keyPassword 'abcdefg'
+            storeFile file('./mysignature.jks')
+            storePassword 'abcdefg'
+        }
+    }
+    productFlavors {
+        dev {
+            // Enable pre-dexing to produce an APK that can be tested on
+            // Android 5.0+ without the time-consuming DEX build processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the production version.
+            minSdkVersion 14
+        }
+    }
     compileSdkVersion 24
     buildToolsVersion "25.0.2"
-
     defaultConfig {
         applicationId "dev.mars.testapplication"
         minSdkVersion 14
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        // Enabling multidex support.
+        multiDexEnabled true
 
+        ndk {
+            // Specifies the ABI configurations of your native
+            // libraries Gradle should build and package with your APK.
+            abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a',
+                    'arm64-v8a'
+        }
     }
     buildTypes {
         release {
+            multiDexKeepFile file ('./multidex-config.txt')
+            //为了测试多个dex，关闭proguard优化
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable false
+            jniDebuggable false
+            signingConfig signingConfigs.release
+            renderscriptDebuggable false
+            zipAlignEnabled true
+            shrinkResources true
         }
         debug {
+
+            multiDexKeepFile file ('./multidex-config.txt')
+            /*
+            如果代码压缩在您增量构建应用时非常重要，请尝试适用于 Gradle 的 Android 插件内置的试用代码压缩器。与 ProGuard 不同，此压缩器支持 Instant Run。
+            您也可以使用与 ProGuard 相同的配置文件来配置 Android 插件压缩器。但是，Android 插件压缩器不会对您的代码进行混淆处理或优化，它只会删除未使用的代码。因此，您应该仅将其用于调试构建，并为发布构建启用 ProGuard，以便对发布 APK 的代码进行混淆处理和优化。
+            要启用 Android 插件压缩器，只需在 "debug" 构建类型中将 useProguard 设置为 false（并保留 minifyEnabled 设置 true）：
+             */
+            minifyEnabled false
             jniDebuggable true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path './src/main/jni/CMakeLists.txt'
         }
     }
 }
 
+
+
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:24.2.1'
-    testCompile 'junit:junit:4.12'
+    //compile 'com.android.support:multidex:1.0.1'
 }
