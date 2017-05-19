@@ -14,10 +14,10 @@ import javax.crypto.spec.DESKeySpec;
 
 public class DESUtils {
 
-	/** ¼ÓÃÜ¹¤¾ß */
+	/** åŠ å¯†å·¥å…· */
 	private Cipher encryptCipher = null;
 
-	/** ½âÃÜ¹¤¾ß */
+	/** è§£å¯†å·¥å…· */
 	private Cipher decryptCipher = null;
 
 	public void initialize_encryptKey(String keyValue) throws Exception {
@@ -33,11 +33,11 @@ public class DESUtils {
 	}
 
 	/**
-	 * ´ÓÖ¸¶¨×Ö·û´®Éú³ÉÃÜÔ¿£¬ÃÜÔ¿ËùĞèµÄ×Ö½ÚÊı×é³¤¶ÈÎª8Î» ²»×ã8Î»Ê±ºóÃæ²¹0£¬³¬³ö8Î»Ö»È¡Ç°8Î»
+	 * ä»æŒ‡å®šå­—ç¬¦ä¸²ç”Ÿæˆå¯†é’¥ï¼Œå¯†é’¥æ‰€éœ€çš„å­—èŠ‚æ•°ç»„é•¿åº¦ä¸º8ä½ ä¸è¶³8ä½æ—¶åé¢è¡¥0ï¼Œè¶…å‡º8ä½åªå–å‰8ä½
 	 * 
 	 * @param arrBTmp
-	 *            ¹¹³É¸Ã×Ö·û´®µÄ×Ö½ÚÊı×é
-	 * @return Éú³ÉµÄÃÜÔ¿
+	 *            æ„æˆè¯¥å­—ç¬¦ä¸²çš„å­—èŠ‚æ•°ç»„
+	 * @return ç”Ÿæˆçš„å¯†é’¥
 	 * @throws java.lang.Exception
 	 */
 	private Key getKey(byte[] arrBTmp) throws Exception {
@@ -48,11 +48,11 @@ public class DESUtils {
 	}
 
 	/**
-	 * ¼ÓÃÜ×Ö½ÚÊı×é
+	 * åŠ å¯†å­—èŠ‚æ•°ç»„
 	 * 
 	 * @param arrB
-	 *            Ğè¼ÓÃÜµÄ×Ö½ÚÊı×é
-	 * @return ¼ÓÃÜºóµÄ×Ö½ÚÊı×é
+	 *            éœ€åŠ å¯†çš„å­—èŠ‚æ•°ç»„
+	 * @return åŠ å¯†åçš„å­—èŠ‚æ•°ç»„
 	 * @throws Exception
 	 */
 	public byte[] encrypt(byte[] arrB) throws Exception {
@@ -60,11 +60,11 @@ public class DESUtils {
 	}
 
 	/**
-	 * ½âÃÜ×Ö½ÚÊı×é
+	 * è§£å¯†å­—èŠ‚æ•°ç»„
 	 * 
 	 * @param arrB
-	 *            Ğè½âÃÜµÄ×Ö½ÚÊı×é
-	 * @return ½âÃÜºóµÄ×Ö½ÚÊı×é
+	 *            éœ€è§£å¯†çš„å­—èŠ‚æ•°ç»„
+	 * @return è§£å¯†åçš„å­—èŠ‚æ•°ç»„
 	 * @throws Exception
 	 */
 	public byte[] decrypt(byte[] arrB) throws Exception {
@@ -72,12 +72,12 @@ public class DESUtils {
 	}
 
 	/**
-	 * ÎÄ¼şfile½øĞĞ¼ÓÃÜ²¢±£´æÄ¿±êÎÄ¼şdestFileÖĞ
+	 * æ–‡ä»¶fileè¿›è¡ŒåŠ å¯†å¹¶ä¿å­˜ç›®æ ‡æ–‡ä»¶destFileä¸­
 	 * 
 	 * @param file
-	 *            Òª¼ÓÃÜµÄÎÄ¼ş Èçc:/test/srcFile.txt
+	 *            è¦åŠ å¯†çš„æ–‡ä»¶ å¦‚c:/test/srcFile.txt
 	 * @param destFile
-	 *            ¼ÓÃÜºó´æ·ÅµÄÎÄ¼şÃû Èçc:/¼ÓÃÜºóÎÄ¼ş.txt
+	 *            åŠ å¯†åå­˜æ”¾çš„æ–‡ä»¶å å¦‚c:/åŠ å¯†åæ–‡ä»¶.txt
 	 */
 	public void encrypt(String sourceFileName, String diminationFileName)
 			throws Exception {
@@ -95,11 +95,11 @@ public class DESUtils {
 	}
 
 	/**
-	 * ÎÄ¼ş²ÉÓÃDESËã·¨½âÃÜÎÄ¼ş
+	 * æ–‡ä»¶é‡‡ç”¨DESç®—æ³•è§£å¯†æ–‡ä»¶
 	 * 
 	 * @param file
-	 *            ÒÑ¼ÓÃÜµÄÎÄ¼ş Èçc:/¼ÓÃÜºóÎÄ¼ş.txt * @param destFile ½âÃÜºó´æ·ÅµÄÎÄ¼şÃû Èçc:/
-	 *            test/½âÃÜºóÎÄ¼ş.txt
+	 *            å·²åŠ å¯†çš„æ–‡ä»¶ å¦‚c:/åŠ å¯†åæ–‡ä»¶.txt * @param destFile è§£å¯†åå­˜æ”¾çš„æ–‡ä»¶å å¦‚c:/
+	 *            test/è§£å¯†åæ–‡ä»¶.txt
 	 */
 	public void decrypt(String sourceFileName, String diminationFileName)
 			throws Exception {

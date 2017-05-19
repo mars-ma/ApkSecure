@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,7 +22,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 /**
- * ½«Ô­APKÓëÍÑ¿ÇDEXºÏ²¢£¬Êä³öĞÂµÄapk
+ * å°†åŸAPKä¸è„±å£³DEXåˆå¹¶ï¼Œè¾“å‡ºæ–°çš„apk
  * 
  * @author ma.xuanwei
  * 
@@ -41,34 +40,38 @@ public class Main {
 	public static void main(String[] args) {
 		String cmd = args[0];
 		if (!"b".equals(cmd)) {
-			System.out.println("´íÎóµÄ²ÎÊı:" + cmd);
+			System.out.println("é”™è¯¯çš„å‚æ•°:" + cmd);
 			return;
 		}
-		// apkÂ·¾¶
+		// apkè·¯å¾„
 		String apkPath = args[1];
 		System.out.println("apkPath:" + apkPath);
-		// ·´±àÒëÄ¿Â¼
+		// åç¼–è¯‘ç›®å½•
 		String decompiledDirName = apkPath.split("\\.")[0];
 		System.out.println("decompiledDir:" + decompiledDirName);
 
-		// É¾³ı·´±àÒëÄ¿Â¼
-		File decompiledFile = new File(getWorkPath() + "\\" + decompiledDirName);
+		// åˆ é™¤åç¼–è¯‘ç›®å½•
+		File outputFolder = new File(getWorkPath() + "\\output");
+		if(!outputFolder.exists()){
+			outputFolder.mkdir();
+			System.out.println("åˆ›å»ºç”Ÿæˆç›®å½•:"+outputFolder.getAbsolutePath());
+		}
+		File decompiledFile = new File(outputFolder.getAbsolutePath() +"\\"+ decompiledDirName);
 		if (decompiledFile.exists()) {
 			FileUtil.delete(decompiledFile);
-			System.out.println("ÒÑÉ¾³ı" + decompiledFile.getAbsolutePath());
+			System.out.println("å·²åˆ é™¤" + decompiledFile.getAbsolutePath());
 		}
-
-		// ´´½¨·´±àÒëÄ¿Â¼
+		// åˆ›å»ºåç¼–è¯‘ç›®å½•
 		boolean decompiled = false;
 		try {
 			long startTime = System.currentTimeMillis();
-			System.out.println("ÕıÔÚ·´±àÒë" + apkPath);
+			System.out.println("æ­£åœ¨åç¼–è¯‘" + apkPath);
 
-			// È·±£apktool.jar·ÅÔÚ¹¤×÷Ä¿Â¼ÏÂ
-			SystemCommand.execute("java -jar apktool.jar d " + apkPath);
-			System.out.println("·´±àÒëºÄÊ± "
+			// ç¡®ä¿apktool.jaræ”¾åœ¨å·¥ä½œç›®å½•ä¸‹
+			SystemCommand.execute("java -jar apktool.jar d " + apkPath+" -o "+decompiledFile.getAbsolutePath());
+			System.out.println("åç¼–è¯‘è€—æ—¶ "
 					+ (System.currentTimeMillis() - startTime) + " ms");
-			System.out.println("·´±àÒë½áÊø,Éú³ÉÄ¿Â¼" + decompiledFile.getAbsolutePath());
+			System.out.println("åç¼–è¯‘ç»“æŸ,ç”Ÿæˆç›®å½•" + decompiledFile.getAbsolutePath());
 			decompiled = true;
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -85,44 +88,41 @@ public class Main {
 				try {
 					SystemCommand.execute("java -jar apktool.jar b "
 							+ decompiledFile.getAbsolutePath());
-					System.out.println("±àÒë³É¹¦");
-					String compiledApkPath = System.getProperty("user.dir")
-							+ "\\" + decompiledDirName + "\\dist\\"
+					System.out.println("ç¼–è¯‘æˆåŠŸ");
+					String compiledApkPath = decompiledFile.getAbsolutePath() + "\\dist\\"
 							+ decompiledDirName + ".apk";
 					File compiledApkFile = new File(compiledApkPath);
 					if (compiledApkFile.exists()) {
-						System.out.println("ÕÒµ½ĞŞ¸ÄManifestºóµÄapk:"
+						System.out.println("æ‰¾åˆ°ä¿®æ”¹Manifeståçš„apk:"
 								+ compiledApkFile.getAbsolutePath());
 
-						// ½âÑ¹ĞÂµÄapk£¬²¢ÕÒµ½classes.dex£¬½«ÆäÒÆ¶¯µ½assetsÖĞ
-						String unzipFilePath = System.getProperty("user.dir")
-								+ "\\" + decompiledDirName + "\\dist\\"
+						// è§£å‹æ–°çš„apkï¼Œå¹¶æ‰¾åˆ°classes.dexï¼Œå°†å…¶ç§»åŠ¨åˆ°assetsä¸­
+						String unzipFilePath = decompiledFile.getAbsolutePath() + "\\dist\\"
 								+ decompiledDirName;
 						FileUtil.delete(new File(unzipFilePath));
-						ZipUtils.upzipFile(compiledApkFile, unzipFilePath);
-						System.out.println("½âÑ¹Íê³É ½âÑ¹Êä³ö:" + unzipFilePath);
+						ZipUtil.upzipFile(compiledApkFile, unzipFilePath);
+						System.out.println("è§£å‹å®Œæˆ è§£å‹è¾“å‡º:" + unzipFilePath);
 						
 						File assetsFile = new File(unzipFilePath+"\\assets");
 						if(!assetsFile.exists()){
 							assetsFile.mkdir();
-							System.out.println("Éú³ÉassetsÎÄ¼ş¼Ğ");
+							System.out.println("ç”Ÿæˆassetsæ–‡ä»¶å¤¹");
 						}
-						// ÕÒµ½ËØÓĞ.dexÎÄ¼ş
+						// æ‰¾åˆ°ç´ æœ‰.dexæ–‡ä»¶
 						List<File> allDexFiles = findAllDexFiles(unzipFilePath);
 						String zipFilePath = unzipFilePath
 								+ "\\assets\\abc"+System.currentTimeMillis()+".zip";
-						// ½«ËùÓĞdexÎÄ¼şÑ¹Ëõ½øassetsÏÂµÄabc.zip
-						ZipUtils.zipFile(zipFilePath, allDexFiles);
-						System.out.println("Éú³ÉÑ¹ËõÎÄ¼ş:" + zipFilePath);
+						// å°†æ‰€æœ‰dexæ–‡ä»¶å‹ç¼©è¿›assetsä¸‹çš„abc.zip
+						ZipUtil.zipFile(zipFilePath, allDexFiles);
+						System.out.println("ç”Ÿæˆå‹ç¼©æ–‡ä»¶:" + zipFilePath);
 						
 						DESUtils desUtils = new DESUtils();
 						desUtils.initialize_encryptKey(PASSWORD);
 						String outputPath = unzipFilePath + "\\assets\\apksecurefile";
 						desUtils.encrypt(zipFilePath, outputPath);
 						(new File(zipFilePath)).delete();
-						System.out.println("Éú³É¼ÓÃÜÎÄ¼ş:" + outputPath);
-						outputPath.endsWith(suffix)
-						// É¾³ıÔ­classes.dex
+						System.out.println("ç”ŸæˆåŠ å¯†æ–‡ä»¶:" + outputPath);
+						// åˆ é™¤åŸclasses.dex
 						for (File f : allDexFiles) {
 							f.delete();
 						}
@@ -142,11 +142,11 @@ public class Main {
 							packageApkFiles(unzipFilePath, newAppPath);
 							File newZipFile = new File(newAppPath);
 							if (newZipFile.exists()) {
-								System.out.println("Éú³ÉÑ¹ËõÎÄ¼ş:" + newAppPath);
+								System.out.println("ç”Ÿæˆå‹ç¼©æ–‡ä»¶:" + newAppPath);
 								File unsignedApkFile = new File(unzipFilePath
 										+ "\\new-app.apk");
 								newZipFile.renameTo(unsignedApkFile);
-								System.out.println("´ò°üAPP:"
+								System.out.println("æ‰“åŒ…APP:"
 										+ unsignedApkFile.getAbsolutePath());
 
 								String signedApkPath = unzipFilePath + "\\"
@@ -157,14 +157,14 @@ public class Main {
 										signedApkPath);
 
 							} else {
-								System.out.println("´ò°üappÊ§°Ü");
+								System.out.println("æ‰“åŒ…appå¤±è´¥");
 							}
 						} else {
-							System.out.println("¸´ÖÆ¿ÇDEX»òsoÊ§°Ü");
+							System.out.println("å¤åˆ¶å£³DEXæˆ–soå¤±è´¥");
 						}
 
 					} else {
-						System.out.println("Î´ÕÒµ½ĞÂÉú³ÉµÄapk");
+						System.out.println("æœªæ‰¾åˆ°æ–°ç”Ÿæˆçš„apk");
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -178,12 +178,12 @@ public class Main {
 				}
 			}
 		} else {
-			System.out.println("·´±àÒëÊ§°Ü");
+			System.out.println("åç¼–è¯‘å¤±è´¥");
 		}
 	}
 
 	/**
-	 * ´ÓÖ¸¶¨Â·¾¶ÕÒµ½ËùÓĞdexÎÄ¼ş
+	 * ä»æŒ‡å®šè·¯å¾„æ‰¾åˆ°æ‰€æœ‰dexæ–‡ä»¶
 	 * 
 	 * @param unzipFilePath
 	 * @return
@@ -195,7 +195,7 @@ public class Main {
 		File folderFile = new File(unzipFilePath);
 		for (File f : folderFile.listFiles()) {
 			if (f.getPath().endsWith(".dex")) {
-				System.out.println("ÕÒµ½dex:" + f.getCanonicalPath());
+				System.out.println("æ‰¾åˆ°dex:" + f.getCanonicalPath());
 				files.add(f);
 			}
 		}
@@ -205,20 +205,29 @@ public class Main {
 	private static void packageApkFiles(String unzipFilePath, String newAppPath)
 			throws IOException, InterruptedException {
 		// TODO Auto-generated method stub
-		String winRARPath = getConfig().winRARPath;
+		/*String winRARPath = getConfig().winRARPath;
 		String zipCommand = "cd " + unzipFilePath + " && \"" + winRARPath
 				+ "\" a -r " + newAppPath + " ./*";
 		System.out.println("cmd:" + zipCommand);
-		SystemCommand.execute(zipCommand);
+		SystemCommand.execute(zipCommand);*/
+		Zip4JUtil.zip(unzipFilePath, newAppPath, true);
+		
+		/*LinkedList<File> files = new LinkedList<>();
+		File root = new File(unzipFilePath);
+		for(File f:root.listFiles()){
+			files.add(f);
+		}
+		
+		ZipUtil.zipFile(newAppPath, files);*/
 	}
 
 	/**
-	 * Ö´ĞĞ´Ë·½·¨È·±££¬jarsignerµÄÂ·¾¶±»Ìí¼Óµ½ÏµÍ³»·¾³±äÁ¿ÖĞ
+	 * æ‰§è¡Œæ­¤æ–¹æ³•ç¡®ä¿ï¼Œjarsignerçš„è·¯å¾„è¢«æ·»åŠ åˆ°ç³»ç»Ÿç¯å¢ƒå˜é‡ä¸­
 	 * 
 	 * @param unsignedApkPath
-	 *            Î´Ç©ÃûµÄapkµÄÂ·¾¶
+	 *            æœªç­¾åçš„apkçš„è·¯å¾„
 	 * @param signedApkPath
-	 *            Éú³ÉµÄÇ©ÃûapkµÄÂ·¾¶
+	 *            ç”Ÿæˆçš„ç­¾åapkçš„è·¯å¾„
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
@@ -239,7 +248,7 @@ public class Main {
 		System.out.println("cmd:" + signCommand);
 		;
 		SystemCommand.execute(signCommand);
-		System.out.println("Ç©ÃûºóµÄapkÂ·¾¶:" + signedApkPath);
+		System.out.println("ç­¾ååçš„apkè·¯å¾„:" + signedApkPath);
 	}
 
 	private static boolean copyDecladdingDexAndLibs(String decladdingDexPath,
@@ -247,8 +256,8 @@ public class Main {
 		// TODO Auto-generated method stub
 		File dexFile = new File(decladdingDexPath);
 		if (dexFile.exists()) {
-			System.out.println("ÍÑ¿ÇdexÂ·¾¶:" + decladdingDexPath);
-			// ¿ªÊ¼¸´ÖÆÎÄ¼ş
+			System.out.println("è„±å£³dexè·¯å¾„:" + decladdingDexPath);
+			// å¼€å§‹å¤åˆ¶æ–‡ä»¶
 			try {
 				FileInputStream fis = new FileInputStream(dexFile);
 				FileOutputStream fos = new FileOutputStream(new File(destPath));
@@ -263,11 +272,12 @@ public class Main {
 				fos.flush();
 				fis.close();
 				fos.close();
-				System.out.println("¿ÇDexÒÑ¸´ÖÆµ½:" + destPath);
+				System.out.println("å£³Dexå·²å¤åˆ¶åˆ°:" + destPath);
 
-				System.out.println("¿ªÊ¼¸´ÖÆlibs,Ô­Ê¼Â·¾¶:" + libsFolderPath + " Ä¿±êÂ·¾¶:"
+				System.out.println("å¼€å§‹å¤åˆ¶libs,åŸå§‹è·¯å¾„:" + libsFolderPath + " ç›®æ ‡è·¯å¾„:"
 						+ destLibsFolderPath);
 				FileUtil.copyDir(libsFolderPath, destLibsFolderPath);
+				System.out.println("å¤åˆ¶ç»“æŸ");
 				return true;
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -278,14 +288,14 @@ public class Main {
 			}
 
 		} else {
-			System.out.println("ÍÑ¿ÇdexÎ´ÕÒµ½");
+			System.out.println("è„±å£³dexæœªæ‰¾åˆ°");
 		}
 		return false;
 	}
 
 	/**
-	 * ĞŞ¸ÄAndroidMinifest.xmlÖĞµÄApplication ClassÎªÍÑ¿ÇµÄApplication ClassÃû
-	 * ÔÚApplication±êÇ©ÖĞÔö¼ÓÔ­Application ClassÃû
+	 * ä¿®æ”¹AndroidMinifest.xmlä¸­çš„Application Classä¸ºè„±å£³çš„Application Classå
+	 * åœ¨Applicationæ ‡ç­¾ä¸­å¢åŠ åŸApplication Classå
 	 * 
 	 * @param workPath
 	 */
@@ -294,7 +304,7 @@ public class Main {
 		String manifestFileName = "AndroidManifest.xml";
 		File manifestFile = new File(workPath + "\\" + manifestFileName);
 		if (!manifestFile.exists()) {
-			System.err.println("ÕÒ²»µ½" + manifestFile.getAbsolutePath());
+			System.err.println("æ‰¾ä¸åˆ°" + manifestFile.getAbsolutePath());
 			return false;
 		}
 		SAXReader reader = new SAXReader();
@@ -302,9 +312,9 @@ public class Main {
 			Document document = reader.read(manifestFile);
 			Element root = document.getRootElement();
 
-			System.out.println("µ±Ç°°üÃû:" + root.attribute("package").getText());
+			System.out.println("å½“å‰åŒ…å:" + root.attribute("package").getText());
 			Element applicationEle = root.element("application");
-			System.out.println("±éÀúapplication±êÇ©µÄÊôĞÔ:");
+			System.out.println("éå†applicationæ ‡ç­¾çš„å±æ€§:");
 			Iterator<Attribute> attrIterator = applicationEle
 					.attributeIterator();
 			String APP_NAME = null;
@@ -316,8 +326,8 @@ public class Main {
 						&& "name".equals(attr.getName())) {
 					APP_NAME = attr.getValue();
 					attr.setValue(DEX_APP_NAME);
-					System.out.println("Ô­application name:" + APP_NAME);
-					System.out.println("ĞÂapplication name:" + attr.getValue());
+					System.out.println("åŸapplication name:" + APP_NAME);
+					System.out.println("æ–°application name:" + attr.getValue());
 				}
 			}
 			Element mataDataEle = applicationEle.addElement("meta-data");
@@ -326,12 +336,12 @@ public class Main {
 
 			manifestFile.delete();
 			OutputFormat format = OutputFormat.createPrettyPrint();
-			format.setEncoding("UTF-8");// ÉèÖÃ±àÂë
+			format.setEncoding("UTF-8");// è®¾ç½®ç¼–ç 
 			Writer writer = new FileWriter(manifestFile.getAbsolutePath());
 			XMLWriter outPut = new XMLWriter(writer, format);
 			outPut.write(document);
 			outPut.close();
-			System.out.println("ĞŞ¸ÄManifest³É¹¦");
+			System.out.println("ä¿®æ”¹ManifestæˆåŠŸ");
 			return true;
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block
@@ -351,10 +361,10 @@ public class Main {
 
 		File signerConfigFile = new File(getWorkPath() + "\\" + "config.xml");
 		if (!signerConfigFile.exists()) {
-			System.err.println("ÕÒ²»µ½" + signerConfigFile.getAbsolutePath());
+			System.err.println("æ‰¾ä¸åˆ°" + signerConfigFile.getAbsolutePath());
 			return null;
 		}
-		// ¶ÁÈ¡XML
+		// è¯»å–XML
 		SAXReader reader = new SAXReader();
 		try {
 			Document document = reader.read(signerConfigFile);
@@ -371,18 +381,14 @@ public class Main {
 			Element aliasPwdEle = root.element("alias-pwd");
 			String aliasPwd = aliasPwdEle.getText();
 
-			Element winRARPathEle = root.element("winrar-path");
-			String winRARPath = winRARPathEle.getText();
-
 			System.out.println("signature-path:" + signaturePath
 					+ " store-pwd:" + storePwd + " alias:" + alias
-					+ " aliasPwd:" + aliasPwd + " winRARPath:" + winRARPath);
+					+ " aliasPwd:" + aliasPwd );
 			config = new Config();
 			config.signaturePath = signaturePath;
 			config.storePwd = storePwd;
 			config.alias = alias;
 			config.aliasPwd = aliasPwd;
-			config.winRARPath = winRARPath;
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

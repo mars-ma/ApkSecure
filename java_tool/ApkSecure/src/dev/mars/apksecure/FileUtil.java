@@ -14,13 +14,13 @@ public class FileUtil {
 			if(file.isDirectory()){
 				for(File f:file.listFiles()){
 					delete(f);
-//					System.out.println("ÒÑÉ¾³ý"+f.getAbsolutePath());
+//					System.out.println("å·²åˆ é™¤"+f.getAbsolutePath());
 				}
 				file.delete();
-//				System.out.println("ÒÑÉ¾³ý"+file.getAbsolutePath());
+//				System.out.println("å·²åˆ é™¤"+file.getAbsolutePath());
 			}else{
 				file.delete();
-//				System.out.println("ÒÑÉ¾³ý"+file.getAbsolutePath());
+//				System.out.println("å·²åˆ é™¤"+file.getAbsolutePath());
 			}
 		}
 	}
