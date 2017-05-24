@@ -312,7 +312,7 @@ void replaceDefaultClassLoader(JNIEnv *env, jobject instance, jstring dexFilePat
 
     //分割dexFilePath
     jmethodID split=env->GetMethodID(env->GetObjectClass(dexFilePath),"split","(Ljava/lang/String;)[Ljava/lang/String;");
-    jobjectArray paths = (jobjectArray) env->CallObjectMethod(dexFilePath, split, env->NewStringUTF(":"));
+    //jobjectArray paths = (jobjectArray) env->CallObjectMethod(dexFilePath, split, env->NewStringUTF(":"));
 
     jclass DexClassLoaderClass = env->FindClass("dalvik/system/DexClassLoader");
     jmethodID initDexClassLoader  = env->GetMethodID(DexClassLoaderClass,"<init>","(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
@@ -345,6 +345,7 @@ void replaceDefaultClassLoader(JNIEnv *env, jobject instance, jstring dexFilePat
 
 JNIEXPORT void JNICALL
 Java_dev_mars_secure_ProxyApplication_onShellCreate(JNIEnv *env, jobject instance,jint build_version) {
+    //首先得到原Application的类名
     jclass ProxyApplicationClass = env->GetObjectClass(instance);
     jmethodID getPackageManager = env->GetMethodID(ProxyApplicationClass,"getPackageManager","()Landroid/content/pm/PackageManager;");
     jobject packageManager = env->CallObjectMethod(instance,getPackageManager);
@@ -366,7 +367,9 @@ Java_dev_mars_secure_ProxyApplication_onShellCreate(JNIEnv *env, jobject instanc
         return;
     }
     LOGE("原始Application Name : %s",env->GetStringUTFChars(originApplicationName,false));
+    //至此以得到原Application的类名
 
+    //将LoadedApk中的mApplication对象替换
     jclass ActivityThreadClass = env->FindClass("android/app/ActivityThread");
     jmethodID currentActivityThread=env->GetStaticMethodID(ActivityThreadClass,"currentActivityThread","()Landroid/app/ActivityThread;");
     jobject activityThread = env->CallStaticObjectMethod(ActivityThreadClass,currentActivityThread);
@@ -387,6 +390,8 @@ Java_dev_mars_secure_ProxyApplication_onShellCreate(JNIEnv *env, jobject instanc
     jfieldID mInitialApplicationField = env->GetFieldID(ActivityThreadClass,"mInitialApplication","Landroid/app/Application;");
     jobject mInitialApplication = env->GetObjectField(activityThread,mInitialApplicationField);
     LOGE("得到壳Application");
+
+
     //将壳Application移除
     jfieldID mAllApplicationsField = env->GetFieldID(ActivityThreadClass,"mAllApplications","Ljava/util/ArrayList;");
     jobject mAllApplications = env->GetObjectField(activityThread,mAllApplicationsField);

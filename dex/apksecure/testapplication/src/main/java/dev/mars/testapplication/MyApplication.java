@@ -2,6 +2,7 @@ package dev.mars.testapplication;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.multidex.MultiDex;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -39,7 +40,7 @@ public class MyApplication extends Application {
         super.attachBaseContext(base);
         LogUtils.d(getClass().getCanonicalName()+" attachBaseContext");
        // methods2.l();
-       // MultiDex.install(this);
+       MultiDex.install(this);
     }
 
     @Override
@@ -65,3 +66,5 @@ public class MyApplication extends Application {
         LogUtils.d(str+" : "+TEST_WORD);
     }
 }
+
+

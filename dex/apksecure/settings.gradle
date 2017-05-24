@@ -1,1 +1,1 @@
-include ':secure-jni'
+include ':secure-jni', ':testapplication'

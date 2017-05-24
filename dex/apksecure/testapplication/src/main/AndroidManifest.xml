@@ -22,7 +22,7 @@
             android:enabled="true"
             android:exported="false"></service>
         
-        <receiver android:name=".MyBroadCastReceiver" android:process="">
+        <receiver android:name=".MyBroadCastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="dev_mars_broadcast_test" />
             </intent-filter>
